@@ -8,6 +8,7 @@ so nothing sensitive lives in source control.
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+import dj_database_url
 
 # ── Load .env ─────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -51,6 +52,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',      # ← must be near the top
     'django.middleware.security.SecurityMiddleware',
+      'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -61,6 +63,8 @@ MIDDLEWARE = [
 
 
 ROOT_URLCONF = 'galela_solutions_backend.urls'
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # ── Templates ─────────────────────────────────────────────────
@@ -87,14 +91,11 @@ ASGI_APPLICATION = 'galela_solutions_backend.asgi.application'
 
 # ── Database — Postgres (Docker locally, Supabase in prod) ────
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME':     os.getenv('DB_NAME',     'Galela_Solutions'),
-        'USER':     os.getenv('DB_USER',     'galela'),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST':     os.getenv('DB_HOST',     'localhost'),
-        'PORT':     os.getenv('DB_PORT',     '5432'),
-    }
+    'default': dj_database_url.config(
+        default=f"postgres://{os.getenv('DB_USER', 'galela')}:{os.getenv('DB_PASSWORD', '')}@{os.getenv('DB_HOST', 'localhost')}:{os.getenv('DB_PORT', '5432')}/{os.getenv('DB_NAME', 'Galela_Solutions')}",
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 
