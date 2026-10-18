@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:17
+    container_name: galela-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: galela
+      POSTGRES_PASSWORD: galela_solutions
+      POSTGRES_DB: Galela_Solutions
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U galela -d Galela_Solutions"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
