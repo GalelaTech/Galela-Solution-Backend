@@ -50,6 +50,8 @@ class RequestFileDashboardSerializer(serializers.ModelSerializer):
 class RequestDashboardSerializer(serializers.ModelSerializer):
     files = RequestFileDashboardSerializer(many=True, read_only=True)
 
+     preferred_date = serializers.DateField(format="%Y-%m-%d", allow_null=True, required=False)
+
     class Meta:
         model = ServiceRequest
         fields = [
