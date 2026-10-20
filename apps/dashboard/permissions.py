@@ -1,15 +1,23 @@
-from django.conf import settings
 from rest_framework import permissions
-
+from django.core import signing
+from django.core.signing import BadSignature, SignatureExpired
 
 class HasDashboardKey(permissions.BasePermission):
     """
-    Allows access only if ?key= matches settings.DASHBOARD_KEY.
+    Checks for a valid Bearer token in the Authorization header.
     """
 
     def has_permission(self, request, view):
-        expected = getattr(settings, 'DASHBOARD_KEY', '').strip()
-        if not expected:
+        auth_header = request.headers.get('Authorization', '')
+        
+        if not auth_header.startswith('Bearer '):
             return False
-        provided = request.query_params.get('key', '').strip()
-        return provided == expected
+            
+        token = auth_header.split(' ')[1]
+        
+        try:
+            # Token is valid for 7 days (604800 seconds)
+            signing.loads(token, salt="dashboard-auth", max_age=604800)
+            return True
+        except (BadSignature, SignatureExpired):
+            return False

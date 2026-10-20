@@ -14,6 +14,11 @@ import base64
 from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes
 from apps.requests.models import RequestFile
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from django.core import signing
+from django.conf import settings
+
 
 
 class DashboardPagination(PageNumberPagination):
@@ -102,3 +107,21 @@ def download_file(request, pk):
     response['Content-Length'] = str(db_file.size)
     
     return response
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_view(request):
+    """
+    POST /api/dashboard/login/
+    Accepts JSON: {"password": "your_password"}
+    Returns: {"token": "secure_signed_token"}
+    """
+    password = request.data.get('password', '')
+    expected_password = getattr(settings, 'DASHBOARD_KEY', '')
+
+    if not expected_password or password != expected_password:
+        return Response({"detail": "Invalid password"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    # Create a signed token valid for 7 days
+    token = signing.dumps({"user": "admin"}, salt="dashboard-auth")
+    return Response({"token": token})
